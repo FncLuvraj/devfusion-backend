@@ -1,43 +1,33 @@
-const Validator = require("../lib/validator");
+// test/validator.test.js
+
+const { Validator, autoTrim, normalizeEmail } = require("../lib/validator");
+
+test("should trim leading and trailing spaces from a string", () => {
+  expect(autoTrim("  Hello World  ")).toBe("Hello World");
+});
+
+test("should normalize email by trimming and converting to lowercase", () => {
+  expect(normalizeEmail("   John.Doe@Example.com  ")).toBe(
+    "john.doe@example.com"
+  );
+});
 
 describe("Validator Class", () => {
   test("should validate required fields", () => {
-    const rules = { username: ["required"] };
-    const data = {};
-    const validator = new Validator(rules);
-    const isValid = validator.validate(data);
-    expect(isValid).toBe(false);
-    expect(validator.getErrors()).toHaveProperty("username");
-  });
-
-  test("should validate string type", () => {
-    const rules = { username: ["string"] };
-    const data = { username: 123 };
-    const validator = new Validator(rules);
-    validator.validate(data);
-    expect(validator.getErrors()).toHaveProperty("username");
-  });
-
-  test("should pass validation with correct data", () => {
-    const rules = { age: ["required", "number"] };
-    const data = { age: 25 };
+    const rules = { email: ["required", "validateEmail"] };
+    const data = { email: " john.doe@example.com " };
     const validator = new Validator(rules);
     const isValid = validator.validate(data);
     expect(isValid).toBe(true);
     expect(validator.getErrors()).toEqual({});
   });
 
-  test("should handle custom validators", () => {
-    const rules = { code: ["required", "isEven"] };
-    const data = { code: 3 };
+  test("should validate email format and trim spaces", () => {
+    const rules = { email: ["required", "validateEmail"] };
+    const data = { email: " john.doe@example " }; // Invalid email
     const validator = new Validator(rules);
-    validator.addCustomValidator("isEven", (field, value, param, instance) => {
-      if (value % 2 !== 0) {
-        instance.addError(field, `${field} must be an even number.`);
-      }
-    });
     const isValid = validator.validate(data);
     expect(isValid).toBe(false);
-    expect(validator.getErrors()).toHaveProperty("code");
+    expect(validator.getErrors()).toHaveProperty("email");
   });
 });

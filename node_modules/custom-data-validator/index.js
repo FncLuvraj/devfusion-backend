@@ -1,3 +1,8 @@
-const Validator = require("./lib/validator");
+const { autoTrim, normalizeEmail, validateEmail } = require("./lib/validator");
 
-module.exports = Validator;
+module.exports = {
+  autoTrim,
+  normalizeEmail,
+  validateEmail,
+  // other validation functions...
+};

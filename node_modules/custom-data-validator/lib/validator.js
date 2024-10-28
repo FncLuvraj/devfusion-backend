@@ -1,3 +1,12 @@
+// Utility functions (defined outside the class)
+function autoTrim(value) {
+  return typeof value === "string" ? value.trim() : value;
+}
+
+function normalizeEmail(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : value;
+}
+
 class Validator {
   constructor(rules = {}) {
     this.rules = rules;
@@ -12,11 +21,25 @@ class Validator {
     this.customValidators[name] = fn;
   }
 
+  // Email validation with normalization
+  validateEmail(fieldName, email) {
+    email = normalizeEmail(email); // Normalize the email input
+    if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+      this.addError(fieldName, `${fieldName} is not a valid email`);
+      return false;
+    }
+    return true;
+  }
+
   validate(data = {}) {
     this.errors = {};
     for (let field in this.rules) {
       let fieldRules = this.rules[field];
       let value = data[field];
+
+      // Auto trim before validation
+      value = autoTrim(value);
+
       for (let rule of fieldRules) {
         let [ruleName, ruleParam] = rule.split(":");
         ruleParam = ruleParam || null;
@@ -96,4 +119,4 @@ class Validator {
   }
 }
 
-module.exports = Validator;
+module.exports = { Validator, autoTrim, normalizeEmail };
