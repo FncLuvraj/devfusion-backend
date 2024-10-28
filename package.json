@@ -4,11 +4,8 @@
   "description": "An application for developers to find like-minded individuals and collaborate on innovative, impactful projects. Whether you’re searching for a coding partner or assembling a team for your next big idea, this platform helps you connect with others based on skills, goals, and shared interests.",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
     "dev": "nodemon app.js"
-  },
-  "engines": {
-    "node": ">=14.x"
   },
   "repository": {
     "type": "git",
@@ -30,9 +27,7 @@
     "express-validator": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.0",
-    "multer": "^1.4.5-lts.1"
-  },
-  "devDependencies": {
+    "multer": "^1.4.5-lts.1",
     "nodemon": "^3.1.7"
   }
 }
