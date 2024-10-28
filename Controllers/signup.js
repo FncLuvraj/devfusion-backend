@@ -115,13 +115,15 @@ async function signup(req, res) {
     res
       .status(201)
       .json({ success: true, message: "User registered successfully" });
-  } catch (error) {
-    console.error(error.message);
+  } atch (error) {
+    console.error(error); // Log the full error, including stack trace
 
-    // Catch any unexpected errors and return a generic error message
+    // Return the error message in the response
     res.status(500).json({
       success: false,
-      message: "There was an error while signing up. Please Enter valid data",
+      message: "There was an error while signing up. Please Enter valid data.",
+      error: error.message || 'Internal server error', // Return the error message
+      stack: error.stack // Optional: include the error stack for deeper debugging
     });
   }
 }
