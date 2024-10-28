@@ -1,7 +1,6 @@
 const Validator = require("custom-data-validator");
 const userModel = require("../Model/userModel");
-const bcrypt = require("bcrypt");
-
+const bcrypt = require('bcryptjs');
 async function signup(req, res) {
   try {
     const {

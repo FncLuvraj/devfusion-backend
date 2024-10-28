@@ -1,6 +1,6 @@
 const Validator = require("custom-data-validator");
 const userModel = require("../Model/userModel");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const login = async (req, res) => {
