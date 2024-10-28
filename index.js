@@ -7,12 +7,12 @@ const cors = require("cors");
 require("dotenv").config();
 
 app.use("/uploads", express.static("uploads"));
-app.use(
-  cors({
-    origin: "http://localhost:5173 ",
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: 'https://devfusion-frontend.onrender.com',  // Replace with your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Methods you are using
+  credentials: true,  // If you're using cookies or authorization headers
+}));
+app.options('*', cors());  // Preflight request handling for all routes
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", routes);
