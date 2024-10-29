@@ -1,4 +1,3 @@
-const Validator = require("custom-data-validator");
 const userModel = require("../Model/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -7,62 +6,62 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation using custom validator
-    const rules = {
-      email: ["required", "string", "regex:^\\S+@\\S+\\.\\S+$"],
-      password: ["required", "string"],
-    };
-
-    const validator = new Validator(rules);
-    const isValid = validator.validate(req.body);
-
-    if (!isValid) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Validation failed",
-          errors: validator.getErrors(),
-        });
+    // Basic field validation
+    if (!email || typeof email !== "string" || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address.",
+      });
     }
 
-    // Proceed with the login logic
-    const userExist = await userModel.findOne({ email });
-    if (!userExist) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+    if (!password || typeof password !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required.",
+      });
     }
 
-    const isMatch = await bcrypt.compare(password, userExist.password);
+    // Check if user exists
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials.",
+      });
+    }
+
+    // Check if the password matches
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials.",
+      });
     }
 
-    const payload = { email: userExist.email, _id: userExist._id };
+    // Generate JWT token
+    const payload = { email: user.email, _id: user._id };
     const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: "24h",
     });
 
+    // Set token in cookie
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
     });
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "User logged in successfully",
-        data: userExist,
-      });
+    // Successful response
+    res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      data: { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName }, // Only return necessary user data
+    });
   } catch (error) {
-    console.log(error.message);
+    console.error("Error during login:", error.message);
     res.status(500).json({ success: false, message: "Error logging in" });
   }
 };

@@ -7,12 +7,20 @@ const cors = require("cors");
 require("dotenv").config();
 
 app.use("/uploads", express.static("uploads"));
+const allowedOrigins = ['http://localhost:5173', 'https://devfusion-frontend.onrender.com'];
+
 app.use(cors({
-  origin: 'https://devfusion-frontend.onrender.com',  // Replace with your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Methods you are using
-  credentials: true,  // If you're using cookies or authorization headers
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
 }));
-app.options('*', cors());  // Preflight request handling for all routes
+app.options('*', cors());  // Allow preflight requests for all routes
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", routes);
