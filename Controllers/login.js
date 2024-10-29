@@ -1,3 +1,4 @@
+const {Validator} = require("custom-data-validator");
 const userModel = require("../Model/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -6,36 +7,46 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Basic field validation
-    if (!email || typeof email !== "string" || !/^\S+@\S+\.\S+$/.test(email)) {
+    // Validation rules (without message)
+    const rules = {
+      email: ["required", "string", "regex:^\\S+@\\S+\\.\\S+$"],
+      password: ["required", "string"],
+    };
+
+    const validator = new Validator(rules);
+    const isValid = validator.validate(req.body);
+
+    if (!isValid) {
+      // Custom error messages
+      const errors = validator.getErrors();
+      const customErrors = {
+        email: errors.email ? "Invalid email format or missing email." : undefined,
+        password: errors.password ? "Password is required." : undefined,
+      };
+
+      // Filter out undefined messages and send response
       return res.status(400).json({
         success: false,
-        message: "Please provide a valid email address.",
+        message: "Validation failed",
+        errors: customErrors,
       });
     }
 
-    if (!password || typeof password !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Password is required.",
-      });
-    }
-
-    // Check if user exists
+    // Check if user exists in the database
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: "Invalid credentials.",
+        message: "Invalid credentials",
       });
     }
 
     // Check if the password matches
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: "Invalid credentials.",
+        message: "Invalid credentials",
       });
     }
 
@@ -45,24 +56,32 @@ const login = async (req, res) => {
       expiresIn: "24h",
     });
 
-    // Set token in cookie
+    // Set token in a cookie
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
     });
 
-    // Successful response
+    // Respond with success and user data
     res.status(200).json({
       success: true,
       message: "User logged in successfully",
-      data: { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName }, // Only return necessary user data
+      data: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     });
   } catch (error) {
-    console.error("Error during login:", error.message);
-    res.status(500).json({ success: false, message: "Error logging in" });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "There was an error while logging in. Please try again.",
+      error: error.message,
+    });
   }
 };
 
