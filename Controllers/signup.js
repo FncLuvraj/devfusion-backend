@@ -1,6 +1,6 @@
-const Validator = require("custom-data-validator");
 const userModel = require("../Model/userModel");
 const bcrypt = require('bcryptjs');
+
 async function signup(req, res) {
   try {
     const {
@@ -13,76 +13,9 @@ async function signup(req, res) {
       profileImagePath,
     } = req.body;
 
-    // Validation rules with custom error messages
-    const rules = {
-      firstName: [
-        "required",
-        "string",
-        "message:First name is required and must be a string.",
-      ],
-      lastName: [
-        "required",
-        "string",
-        "message:Last name is required and must be a string.",
-      ],
-      email: [
-        "required",
-        "string",
-        "regex:^\\S+@\\S+\\.\\S+$",
-        "message:Please enter a valid email address (example@example.com).",
-      ],
-      skills: [
-        "required",
-        "array",
-        "message:Please provide at least one skill in an array format.",
-      ],
-      password: [
-        "required",
-        "string",
-        "minLength:6",
-        "message:Password must be at least 6 characters long.",
-      ],
-      bio: ["optional", "string", "message:Bio must be a string."],
-      profileImagePath: [
-        "optional",
-        "string",
-        "message:Profile image path must be a valid URL.",
-      ],
-    };
-
-    const validator = new Validator(rules);
-
-    // Custom validation for "optional"
-    validator.addCustomValidator(
-      "optional",
-      (field, value, param, validatorInstance) => {
-        if (value === undefined || value === null) {
-          // Skip validation if the field is not provided
-          return;
-        }
-      }
-    );
-
-    // Custom validation for "array"
-    validator.addCustomValidator(
-      "array",
-      (field, value, param, validatorInstance) => {
-        if (!Array.isArray(value)) {
-          validatorInstance.addError(field, `${field} must be an array.`);
-        }
-      }
-    );
-
-    // Run the validation
-    const isValid = validator.validate(req.body);
-
-    // If validation fails, return the validation errors
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed. Please correct the errors below.",
-        errors: validator.getErrors(),
-      });
+    // Check for required fields
+    if (!firstName || !lastName || !email || !skills || !password || !bio || !profileImagePath) {
+      return res.status(400).json({ status: false, message: "All fields are required" });
     }
 
     // Check if the email already exists in the database
@@ -112,16 +45,13 @@ async function signup(req, res) {
     await newUser.save();
 
     // Return a success response after the user has been saved
-    res
-      .status(201)
-      .json({ success: true, message: "User registered successfully" });
-  } atch (error) {
+    res.status(201).json({ success: true, message: "User registered successfully" });
+  } catch (error) {
     console.error(error); // Log the full error, including stack trace
-
     // Return the error message in the response
     res.status(500).json({
       success: false,
-      message: "There was an error while signing up. Please Enter valid data.",
+      message: "There was an error while signing up. Please enter valid data.",
       error: error.message || 'Internal server error', // Return the error message
       stack: error.stack // Optional: include the error stack for deeper debugging
     });
